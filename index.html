@@ -7,7 +7,7 @@
   <title>TireanSlots</title>
 
   <!--Sourcemap: https://cdn.tmijs.org/js/latest/1.x/tmi.js.map-->
-  <script src="//cdn.tmijs.org/js/1.2.1/tmi.min.js"
+  <script src="https://cdn.tmijs.org/js/1.2.1/tmi.min.js"
     integrity="sha384-eE0n7sm1W7DOUI2Xh5I4qSpZTe6hupAO0ovLfqEy0yVJtGRBNfssdmjbJhEYm6Bw"
     crossorigin="anonymous"></script>
   <script
@@ -29,7 +29,7 @@
     <div class="slot"><img src="./img/blank.gif"></div>
   </div>
 
-  <div id="debugContainer">
+  <div id="debugContainer" style="display:none">
     <div><input type="button" id="spin" value="spin"></div>
     <div id="debug"></div>
   </div>
@@ -38,6 +38,10 @@
 
   <script type="text/javascript">
     'use strict'
+
+    if (window.location.href.includes('?debug')) {
+      $('#debugContainer').show()
+    }
 
     $('#hidden').hide()
     for (var i = 0; i < 8; i++) {
