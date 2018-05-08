@@ -38,9 +38,16 @@
 
   <script type="text/javascript">
     'use strict'
+    
+    function log (s) { console.info(s); $('#debug').prepend('<div>info: ' + s + '</div>') }
 
     if (window.location.href.includes('?debug')) {
       $('#debugContainer').show()
+    }
+
+    var channels = window.location.href.split('channels=')[1] || null
+    if (channels) {
+      channels = channels.split(',')
     }
 
     $('#hidden').hide()
@@ -52,7 +59,9 @@
       spin()
     })
 
-    function log (s) { console.info(s); $('#debug').prepend('<div>info: ' + s + '</div>') }
+    if (channels === null) {
+      channels = ['tirean']
+    }
 
     var client = new tmi.client({
       options: {
@@ -61,7 +70,7 @@
       connection: {
         secure: true
       },
-      channels: ["#tirean"],
+      channels: channels,
       logger: {
         info: function (s) { console.info(s); $('#debug').prepend('<div>info: ' + s + '</div>') },
         warn: function (s) { console.warn(s); $('#debug').prepend('<div>warn: ' + s + '</div>') },
@@ -75,8 +84,11 @@
     client.connect()
 
     client.on('chat', function (channel, userobject, message, self) {
-      if (self) return
-      if (!userobject.mod) return
+      if (self || !userobject.mod) {
+        if (channel !== '#' + userobject.username) {
+          return
+        }
+      }
 
       if (message.toLowerCase().startsWith('!spin')) {
         spin()
