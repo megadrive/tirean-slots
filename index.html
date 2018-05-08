@@ -15,29 +15,38 @@
 
   <style>
     .slot { display: inline-block }
-    .slot img { width: 128px; height: 128px }
-    #debug { font-family: courier; height: 240px; overflow: scroll; }
+    .slot img { width: 122px; height: 122px }
+    #debugContainer { position: absolute; bottom: 0 }
+    #debug { font-family: courier; height: 240px; overflow: auto; }
   </style>
 </head>
 <body>
   <div id="slots">
-    <div class="slot"><img></div>
-    <div class="slot"><img></div>
-    <div class="slot"><img></div>
+    <div class="slot"><img src="./img/blank.gif"></div>
+    <div class="slot"><img src="./img/blank.gif"></div>
+    <div class="slot"><img src="./img/blank.gif"></div>
   </div>
 
-  <div><input type="button" id="spin" value="spin"></div>
+  <div id="debugContainer">
+    <div><input type="button" id="spin" value="spin"></div>
+    <div id="debug"></div>
+  </div>
 
-  <div id="debug"></div>
+  <div id="hidden"></div>
 
   <script type="text/javascript">
     'use strict'
+
+    $('#hidden').hide()
+    for (var i = 0; i < 8; i++) {
+      $('#hidden').append('<img src="./img/' + i + '.png">')
+    }
 
     $('#spin').on('click', function () {
       spin()
     })
 
-    function log (s) { console.info(s); $('#debug').append('<div>info: ' + s + '</div>') }
+    function log (s) { console.info(s); $('#debug').prepend('<div>info: ' + s + '</div>') }
 
     var client = new tmi.client({
       options: {
@@ -45,11 +54,13 @@
       },
       channels: ["#tirean"],
       logger: {
-        info: function (s) { console.info(s); $('#debug').append('<div>info: ' + s + '</div>') },
-        warn: function (s) { console.warn(s); $('#debug').append('<div>warn: ' + s + '</div>') },
-        error: function (s) { console.error(s); $('#debug').append('<div>error: ' + s + '</div>') }
+        info: function (s) { console.info(s); $('#debug').prepend('<div>info: ' + s + '</div>') },
+        warn: function (s) { console.warn(s); $('#debug').prepend('<div>warn: ' + s + '</div>') },
+        error: function (s) { console.error(s); $('#debug').prepend('<div>error: ' + s + '</div>') }
       }
     })
+
+    var randomiseImagesId = 0
 
     // Connect the client to the server..
     client.connect()
@@ -68,19 +79,20 @@
     }
 
     function spin () {
-      log('spinning')
-      var slots = [getRandomInt(7), getRandomInt(7), getRandomInt(7)]
+      if (randomiseImagesId > 0) return
 
-      log(slots)
+      var slots = [getRandomInt(7), getRandomInt(7), getRandomInt(7)]
+      
+      log('spinning with ' + slots)
 
       randomiseImages(false, slots)
     }
 
-    var randomiseImagesId = 0
     function randomiseImages (stop, setThese) {
       if (stop) {
         log('stopping random images, setting images: ' + setThese)
         clearInterval(randomiseImagesId)
+        randomiseImagesId = 0
         $('.slot img').each(function(i) {
           switch (i) {
             case 0:
@@ -100,7 +112,7 @@
           $('.slot img').each(function () {
             $(this).attr('src', './img/' + getRandomInt(7) + '.png')
           })
-        }, 250)
+        }, 50)
         setTimeout(function () {
           randomiseImages(true, setThese)
         }, 5000)
