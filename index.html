@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>TireanSlots</title>
+
+  <!--Sourcemap: http://cdn.tmijs.org/js/latest/1.x/tmi.js.map-->
+  <script src="http://cdn.tmijs.org/js/latest/1.x/tmi.min.js"></script>
+  <script
+    src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
+    integrity="sha256-3edrmyuQ0w65f8gfBsqowzjJe2iM6n0nKciPUp8y+7E="
+    crossorigin="anonymous"></script>
+
+  <style>
+    .slot { display: inline-block }
+    .slot img { width: 128px; height: 128px }
+    #debug { font-family: courier; height: 240px; overflow: scroll; }
+  </style>
+</head>
+<body>
+  <div id="slots">
+    <div class="slot"><img></div>
+    <div class="slot"><img></div>
+    <div class="slot"><img></div>
+  </div>
+
+  <div><input type="button" id="spin" value="spin"></div>
+
+  <div id="debug"></div>
+
+  <script type="text/javascript">
+    'use strict'
+
+    $('#spin').on('click', function () {
+      spin()
+    })
+
+    function log (s) { console.info(s); $('#debug').append('<div>info: ' + s + '</div>') }
+
+    var client = new tmi.client({
+      options: {
+        debug: true
+      },
+      channels: ["#tirean"],
+      logger: {
+        info: function (s) { console.info(s); $('#debug').append('<div>info: ' + s + '</div>') },
+        warn: function (s) { console.warn(s); $('#debug').append('<div>warn: ' + s + '</div>') },
+        error: function (s) { console.error(s); $('#debug').append('<div>error: ' + s + '</div>') }
+      }
+    })
+
+    // Connect the client to the server..
+    client.connect()
+
+    client.on('chat', function (channel, userobject, message, self) {
+      if (self) return
+      if (!userobject.mod) return
+
+      if (message.toLowerCase().startsWith('!spin')) {
+        spin()
+      }
+    })
+
+    function getRandomInt(max) {
+      return Math.floor(Math.random() * Math.floor(max));
+    }
+
+    function spin () {
+      log('spinning')
+      var slots = [getRandomInt(7), getRandomInt(7), getRandomInt(7)]
+
+      log(slots)
+
+      randomiseImages(false, slots)
+    }
+
+    var randomiseImagesId = 0
+    function randomiseImages (stop, setThese) {
+      if (stop) {
+        log('stopping random images, setting images: ' + setThese)
+        clearInterval(randomiseImagesId)
+        $('.slot img').each(function(i) {
+          switch (i) {
+            case 0:
+            $(this).attr('src', './img/' + setThese[0] + '.png')
+              break
+            case 1:
+            $(this).attr('src', './img/' + setThese[1] + '.png')
+              break
+            case 2:
+            $(this).attr('src', './img/' + setThese[2] + '.png')
+              break
+          }
+        })
+      } else {
+        log('starting random images')
+        randomiseImagesId = setInterval(function () {
+          $('.slot img').each(function () {
+            $(this).attr('src', './img/' + getRandomInt(7) + '.png')
+          })
+        }, 250)
+        setTimeout(function () {
+          randomiseImages(true, setThese)
+        }, 5000)
+      }
+    }
+  </script>
+</body>
+</html>
