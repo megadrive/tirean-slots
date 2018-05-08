@@ -54,6 +54,9 @@
       options: {
         debug: true
       },
+      connection: {
+        secure: true
+      },
       channels: ["#tirean"],
       logger: {
         info: function (s) { console.info(s); $('#debug').prepend('<div>info: ' + s + '</div>') },
