@@ -14,6 +14,8 @@
     src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
     integrity="sha256-3edrmyuQ0w65f8gfBsqowzjJe2iM6n0nKciPUp8y+7E="
     crossorigin="anonymous"></script>
+  <script
+    src="https://cdnjs.cloudflare.com/ajax/libs/howler/2.0.12/howler.core.min.js"></script>
 
   <style>
     .slot { display: inline-block }
@@ -41,6 +43,20 @@
     
     function log (s) { console.info(s); $('#debug').prepend('<div>info: ' + s + '</div>') }
 
+    // load sounds
+    var slotsSfx = new Howl({
+      src: ['sfx/slots2.mp3'],
+      sprite: {
+        slot: [9000, 60000]
+      }
+    })
+    var yaySfx = new Howl({
+      src: ['sfx/yay.mp3']
+    })
+    var awwSfx = new Howl({
+      src: ['sfx/groan.mp3']
+    })
+
     if (window.location.href.includes('?debug')) {
       $('#debugContainer').show()
     }
@@ -65,7 +81,7 @@
 
     var client = new tmi.client({
       options: {
-        debug: true
+        debug: false
       },
       connection: {
         secure: true
@@ -78,7 +94,7 @@
       }
     })
 
-    var randomiseImagesId = 0
+    var isSpinning = false
 
     // Connect the client to the server..
     client.connect()
@@ -100,44 +116,48 @@
     }
 
     function spin () {
-      if (randomiseImagesId > 0) return
-
-      var slots = [getRandomInt(7), getRandomInt(7), getRandomInt(7)]
-      
-      log('spinning with ' + slots)
-
-      randomiseImages(false, slots)
+      if (!isSpinning) {
+        randomiseImages()
+      }
     }
 
-    function randomiseImages (stop, setThese) {
-      if (stop) {
-        log('stopping random images, setting images: ' + setThese)
-        clearInterval(randomiseImagesId)
-        randomiseImagesId = 0
-        $('.slot img').each(function(i) {
-          switch (i) {
-            case 0:
-            $(this).attr('src', './img/' + setThese[0] + '.png')
-              break
-            case 1:
-            $(this).attr('src', './img/' + setThese[1] + '.png')
-              break
-            case 2:
-            $(this).attr('src', './img/' + setThese[2] + '.png')
-              break
-          }
-        })
-      } else {
-        log('starting random images')
-        randomiseImagesId = setInterval(function () {
-          $('.slot img').each(function () {
-            $(this).attr('src', './img/' + getRandomInt(7) + '.png')
-          })
+    function randomiseImages () {
+      log('starting random images')
+
+      var slots = [getRandomInt(7), getRandomInt(7), getRandomInt(7)]
+      log('spinning with ' + slots)
+      isSpinning = true
+      slotsSfx.play('slot')
+
+      // slots spin
+      var num = 3000
+      var intervals = []
+      $('.slot img').each(function (i) {
+        var $this = $(this)
+        intervals[i] = setInterval(function () {
+          $this.attr('src', './img/' + getRandomInt(7) + '.png')
         }, 50)
+
         setTimeout(function () {
-          randomiseImages(true, setThese)
-        }, 5000)
-      }
+          log('clearing interval ' + intervals[i])
+          clearInterval(intervals[i])
+          $this.attr('src', './img/' + slots[i] + '.png')
+
+          if (i === 2) {
+            isSpinning = false
+            slotsSfx.stop()
+            // DO WE HAVE A WINNER
+            if (slots[0] === slots[1] && slots[0] === slots[2]) {
+              // WINNER
+              yaySfx.play()
+              log('winner')
+            } else {
+              awwSfx.play()
+              log('loser')
+            }
+          }
+        }, num * (i + 1))
+      })
     }
   </script>
 </body>
